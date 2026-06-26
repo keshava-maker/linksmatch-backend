@@ -92,31 +92,24 @@ async def search_store(store_key: str, search_query: str, brand: str, size: str)
         print(f"Search error on {store_key}: {e}")
         return None
 
-@app.get("/api/compare")
-async def compare(
-    brand: str = Query(...),
-    search_query: str = Query(...),
-    size: str = Query(""),
-):
+@app.post("/api/compare")
+async def compare_prices(req: CompareRequest):
     """Main endpoint: search for a product across all stores"""
     
     if not SERPAPI_KEY:
-        return {"error": "SERPAPI_KEY not configured", "results": []}
-
-    print(f"Searching for {brand} {size} | Query: {search_query}")
-
+        return {"error": "SERPAPI_KEY not configured", "matches": []}
+    
+    print(f"Searching for {req.brand} {req.size} | Query: {req.search_query}")
+    
     tasks = [
-        search_store(store_key, search_query, brand, size)
+        search_store(store_key, req.search_query, req.brand, req.size)
         for store_key in STORES.keys()
     ]
+    
     results = await asyncio.gather(*tasks)
     results = [r for r in results if r is not None]
-
+    
     return {
-        "results": results,
+        "matches": results,
         "message": f"Found on {len(results)} store(s)"
     }
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
