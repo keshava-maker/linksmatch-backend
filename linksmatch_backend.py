@@ -91,7 +91,10 @@ async def search_store(store_key: str, search_query: str, brand: str, size: str)
     except Exception as e:
         print(f"Search error on {store_key}: {e}")
         return None
-
+class CompareRequest(BaseModel):
+    brand: str
+    size: Optional[str] = None
+    search_query: str
 @app.post("/api/compare")
 async def compare_prices(req: CompareRequest):
     """Main endpoint: search for a product across all stores"""
